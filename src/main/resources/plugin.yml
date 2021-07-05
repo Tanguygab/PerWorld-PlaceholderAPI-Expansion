@@ -1,0 +1,4 @@
+name: PerWorldDeathCount Expansion
+version: @version@
+main: io.github.tanguygab.perworlddeathcountexpansion.PerWorldDeathCountExpansion
+api-version: 1.17
