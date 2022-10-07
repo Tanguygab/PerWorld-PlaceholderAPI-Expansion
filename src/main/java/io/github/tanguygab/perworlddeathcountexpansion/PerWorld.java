@@ -38,7 +38,7 @@ public final class PerWorld extends PlaceholderExpansion implements Listener, Ta
 
     @Override
     public String getVersion() {
-        return "1.0.0";
+        return "1.0.1";
     }
 
     @Override
@@ -53,7 +53,7 @@ public final class PerWorld extends PlaceholderExpansion implements Listener, Ta
         if (params.equals(type+"_current") && player.getPlayer() != null)
             return getValue(player,type,player.getPlayer().getWorld().getName());
         if (params.startsWith(type+"_in_"))
-            return getValue(player,type,params.replace("in_",""));
+            return getValue(player,type,params.replace(type+"_in_",""));
 
         return null;
     }
