@@ -9,7 +9,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,43 +25,54 @@ public final class PerWorld extends PlaceholderExpansion implements Listener, Ta
             "%perworld_kills_current%",
             "%perworld_kills_in_<world name>%",
             "%perworld_deaths_current%",
-            "%perworld_deaths_in_<world name>%"
+            "%perworld_deaths_in_<world name>%",
+            "%perworld_blocks-broken.<block>_current%",
+            "%perworld_blocks-broken.<block>_in_<world name>%"
     );
 
     @Override
-    public String getIdentifier() {
+    public @NotNull String getIdentifier() {
         return "perworld";
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return "Tanguygab";
     }
 
     @Override
-    public String getVersion() {
+    public @NotNull String getVersion() {
         return "1.0.1";
     }
 
     @Override
-    public List<String> getPlaceholders() {
+    public @NotNull List<String> getPlaceholders() {
         return placeholders;
     }
 
     @Override
     public String onRequest(OfflinePlayer player, String params) {
-        String type = params.split("_")[0];
 
-        if (params.equals(type+"_current") && player.getPlayer() != null)
-            return getValue(player,type,player.getPlayer().getWorld().getName());
-        if (params.startsWith(type+"_in_"))
-            return getValue(player,type,params.replace(type+"_in_",""));
+        if (params.endsWith("_current") && player.getPlayer() != null) {
+            String type = params.substring(0, params.length()-8);
 
+            return getValue(player, type, player.getPlayer().getWorld().getName());
+        }
+        if (params.contains("_in_")) {
+            String[] args = params.split("_in_");
+            if (args.length < 2) return null;
+
+            return getValue(player, args[0], args[1]);
+        }
         return null;
     }
 
     public String getValue(OfflinePlayer player, String type, String world) {
-        return config.getInt(player.getUniqueId()+"."+type+"."+world,0)+"";
+        return getInt(player, type, world)+"";
+    }
+
+    public int getInt(OfflinePlayer player, String type, String world) {
+        return config.getInt(player.getUniqueId()+"."+type+"."+world,0);
     }
 
     @EventHandler
@@ -67,28 +80,39 @@ public final class PerWorld extends PlaceholderExpansion implements Listener, Ta
         Player p = e.getEntity();
         String w = p.getWorld().getName();
         String uuid = p.getUniqueId().toString();
-        config.set(uuid+".deaths."+w,config.getInt(uuid+".deaths."+w,0)+1);
+        config.set(uuid+".deaths."+w, getInt(p, "deaths", w) + 1);
+
         if (p.getKiller() != null) {
             uuid = p.getKiller().getUniqueId().toString();
-            config.set(uuid + ".kills." + w, config.getInt(uuid + ".kills." + w, 0) + 1);
+            config.set(uuid + ".kills." + w, getInt(p, "kills", w) + 1);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent e) {
+        Player p = e.getPlayer();
+        String w = p.getWorld().getName();
+        String block = e.getBlock().getType().toString();
+        String uuid = p.getUniqueId().toString();
+        config.set(uuid+".blocks-broken."+block+"."+w, getInt(p, "blocks-broken."+block, w) + 1);
     }
 
     @Override
     public void start() {
         file = new File(PlaceholderAPIPlugin.getInstance().getDataFolder(), "perworld-data.yml");
         if (!file.exists()) {
-            try {file.createNewFile();}
-            catch (IOException e) {e.printStackTrace();}
+            try { //noinspection ResultOfMethodCallIgnored
+                file.createNewFile();
+            } catch (IOException e) {throw new RuntimeException(e);}
         }
         config = new YamlConfiguration();
         try {config.load(file);}
-        catch (Exception e) {e.printStackTrace();}
+        catch (Exception e) {throw new RuntimeException(e);}
     }
 
     @Override
     public void stop() {
         try {config.save(file);}
-        catch (IOException e) {e.printStackTrace();}
+        catch (IOException e) {throw new RuntimeException(e);}
     }
 }

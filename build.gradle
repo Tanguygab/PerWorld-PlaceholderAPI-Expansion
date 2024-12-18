@@ -3,10 +3,7 @@ plugins {
 }
 
 group = 'io.github.tanguygab'
-version = '1.0.1'
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+version = '1.0.2'
 
 repositories {
     mavenCentral()
@@ -25,6 +22,6 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.17-R0.1-SNAPSHOT'
-    compileOnly 'me.clip:placeholderapi:2.10.9'
+    compileOnly 'org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT'
+    compileOnly 'me.clip:placeholderapi:2.11.6'
 }
